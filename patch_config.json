@@ -1,0 +1,32 @@
+[
+  {
+    "targetFile": "packages/core/src/core/prompts.ts",
+    "variableName": "basePrompt",
+    "promptKey": "base_prompt"
+  },
+  {
+    "targetFile": "packages/core/src/core/prompts.ts",
+    "variableName": "gitRules", 
+    "promptKey": "git_rules"
+  },
+  {
+    "targetFile": "packages/core/src/core/prompts.ts",
+    "variableName": "sandboxRules",
+    "promptKey": "sandbox_rules"
+  },
+  {
+    "targetFile": "packages/core/src/core/prompts.ts",
+    "variableName": "compressionPrompt",
+    "promptKey": "compression_prompt"
+  },
+  {
+    "targetFile": "packages/core/src/utils/summarizer.ts",
+    "variableName": "SUMMARIZE_TOOL_OUTPUT_PROMPT",
+    "promptKey": "summarize_tool_output_prompt"
+  },
+  {
+    "targetFile": "packages/core/src/utils/llm-edit-fixer.ts",
+    "variableName": "EDIT_SYS_PROMPT",
+    "promptKey": "llm_edit_fixer_prompt"
+  }
+]

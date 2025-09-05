@@ -46,6 +46,31 @@ export const Composer = () => {
     [uiState.terminalWidth],
   );
 
+  const consumedTokens = Object.values(
+    uiState.sessionStats.metrics.models,
+  ).reduce((acc, modelMetrics) => acc + modelMetrics.tokens.total, 0);
+
+  // Build footer props from context values
+  const footerProps: Omit<FooterProps, 'vimMode'> = {
+    model: config.getModel(),
+    targetDir: config.getTargetDir(),
+    debugMode: config.getDebugMode(),
+    branchName: uiState.branchName,
+    debugMessage: uiState.debugMessage,
+    corgiMode: uiState.corgiMode,
+    errorCount: uiState.errorCount,
+    showErrorDetails: uiState.showErrorDetails,
+    showMemoryUsage:
+      config.getDebugMode() || settings.merged.ui?.showMemoryUsage || false,
+    promptTokenCount: uiState.sessionStats.lastPromptTokenCount,
+    nightly: uiState.nightly,
+    isTrustedFolder: uiState.isTrustedFolder,
+    hideCWD: settings.merged.ui?.footer?.hideCWD || false,
+    hideSandboxStatus: settings.merged.ui?.footer?.hideSandboxStatus || false,
+    hideModelInfo: settings.merged.ui?.footer?.hideModelInfo || false,
+    consumedTokens: consumedTokens,
+  };
+
   return (
     <Box flexDirection="column">
       {!uiState.embeddedShellFocused && (
