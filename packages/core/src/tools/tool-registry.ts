@@ -95,7 +95,7 @@ class DiscoveredToolInvocation extends BaseToolInvocation<
     });
 
     // if there is any error, non-zero exit code, signal, or stderr, return error details instead of stdout
-    if (error || code !== 0 || signal || stderr) {
+    if (error || code !== 0 || signal) {
       const llmContent = [
         `Stdout: ${stdout || '(empty)'}`,
         `Stderr: ${stderr || '(empty)'}`,

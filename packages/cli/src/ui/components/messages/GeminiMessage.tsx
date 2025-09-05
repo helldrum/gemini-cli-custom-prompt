@@ -23,24 +23,14 @@ export const GeminiMessage: React.FC<GeminiMessageProps> = ({
   availableTerminalHeight,
   terminalWidth,
 }) => {
-  const prefix = '✦ ';
-  const prefixWidth = prefix.length;
-
   return (
-    <Box flexDirection="row">
-      <Box width={prefixWidth}>
-        <Text color={theme.text.accent} aria-label={SCREEN_READER_MODEL_PREFIX}>
-          {prefix}
-        </Text>
-      </Box>
-      <Box flexGrow={1} flexDirection="column">
-        <MarkdownDisplay
-          text={text}
-          isPending={isPending}
-          availableTerminalHeight={availableTerminalHeight}
-          terminalWidth={terminalWidth}
-        />
-      </Box>
+    <Box flexGrow={1} flexDirection="column">
+      <MarkdownDisplay
+        text={text}
+        isPending={isPending}
+        availableTerminalHeight={availableTerminalHeight}
+        terminalWidth={terminalWidth}
+      />
     </Box>
   );
 };

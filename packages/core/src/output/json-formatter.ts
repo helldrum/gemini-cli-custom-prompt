@@ -9,7 +9,13 @@ import type { SessionMetrics } from '../telemetry/uiTelemetry.js';
 import type { JsonError, JsonOutput } from './types.js';
 
 export class JsonFormatter {
-  format(response?: string, stats?: SessionMetrics, error?: JsonError): string {
+  format(
+    response?: string,
+    stats?: SessionMetrics,
+    error?: JsonError,
+    totalTokens?: number,
+    costEstimation?: number,
+  ): string {
     const output: JsonOutput = {};
 
     if (response !== undefined) {
@@ -24,6 +30,14 @@ export class JsonFormatter {
       output.error = error;
     }
 
+    if (totalTokens !== undefined) {
+      output.totalTokens = totalTokens;
+    }
+
+    if (costEstimation !== undefined) {
+      output.costEstimation = costEstimation;
+    }
+
     return JSON.stringify(output, null, 2);
   }
 
@@ -34,6 +48,6 @@ export class JsonFormatter {
       ...(code && { code }),
     };
 
-    return this.format(undefined, undefined, jsonError);
+    return this.format(undefined, undefined, jsonError, undefined, undefined);
   }
 }

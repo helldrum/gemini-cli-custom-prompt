@@ -39,13 +39,12 @@
     "test:scripts": "vitest run --config ./scripts/tests/vitest.config.ts",
     "test:e2e": "cross-env VERBOSE=true KEEP_OUTPUT=true npm run test:integration:sandbox:none",
     "test:integration:all": "npm run test:integration:sandbox:none && npm run test:integration:sandbox:docker && npm run test:integration:sandbox:podman",
-    "test:integration:sandbox:none": "cross-env GEMINI_SANDBOX=false vitest run --root ./integration-tests",
-    "test:integration:sandbox:docker": "cross-env GEMINI_SANDBOX=docker npm run build:sandbox && cross-env GEMINI_SANDBOX=docker vitest run --root ./integration-tests",
-    "test:integration:sandbox:podman": "cross-env GEMINI_SANDBOX=podman vitest run --root ./integration-tests",
+    "test:integration:sandbox:none": "GEMINI_SANDBOX=false vitest run --root ./integration-tests",
+    "test:integration:sandbox:docker": "GEMINI_SANDBOX=docker npm run build:sandbox && GEMINI_SANDBOX=docker vitest run --root ./integration-tests",
+    "test:integration:sandbox:podman": "GEMINI_SANDBOX=podman vitest run --root ./integration-tests",
     "lint": "eslint . --ext .ts,.tsx && eslint integration-tests",
     "lint:fix": "eslint . --fix && eslint integration-tests --fix",
     "lint:ci": "eslint . --ext .ts,.tsx --max-warnings 0 && eslint integration-tests --max-warnings 0",
-    "lint:all": "node scripts/lint.js",
     "format": "prettier --experimental-cli --write .",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "preflight": "npm run clean && npm ci && npm run format && npm run lint:ci && npm run build && npm run typecheck && npm run test:ci",
@@ -105,12 +104,15 @@
     "semver": "^7.7.2",
     "strip-ansi": "^7.1.2",
     "tsx": "^4.20.3",
+    "typescript": "^5.8.3",
     "typescript-eslint": "^8.30.1",
     "vitest": "^3.2.4",
     "yargs": "^17.7.2"
   },
   "dependencies": {
     "@testing-library/dom": "^10.4.1",
+    "@lvce-editor/ripgrep": "^1.6.0",
+    "js-yaml": "^4.1.0",
     "simple-git": "^3.28.0"
   },
   "optionalDependencies": {

@@ -8,6 +8,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { writeFileSync } from 'node:fs';
+import promptPatcherPlugin from './esbuild.prompt-patcher.js'; // Import the plugin
 
 let esbuild;
 try {

@@ -117,6 +117,7 @@ const createMockUIState = (overrides: Partial<UIState> = {}): UIState =>
       lastPromptTokenCount: 0,
       sessionTokenCount: 0,
       totalPrompts: 0,
+      metrics: { models: {} }, // Added mock for models
     },
     branchName: 'main',
     debugMessage: '',
