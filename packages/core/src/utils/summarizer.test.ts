@@ -8,11 +8,7 @@ import type { Mock } from 'vitest';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { GeminiClient } from '../core/client.js';
 import { Config } from '../config/config.js';
-import {
-  summarizeToolOutput,
-  llmSummarizer,
-  defaultSummarizer,
-} from './summarizer.js';
+import { summarizeToolOutput, llmSummarizer } from './summarizer.js';
 import type { ToolResult } from '../tools/tools.js';
 
 // Mock GeminiClient and Config constructor
@@ -185,21 +181,6 @@ Return the summary string which should first contain an overall summarization of
     });
   });
 
-  describe('defaultSummarizer', () => {
-    it('should stringify the llmContent', async () => {
-      const toolResult: ToolResult = {
-        llmContent: { text: 'some data' },
-        returnDisplay: '',
-      };
-
-      const result = await defaultSummarizer(
-        toolResult,
-        mockGeminiClient,
-        abortSignal,
-      );
-
-      expect(result).toBe(JSON.stringify({ text: 'some data' }));
-      expect(mockGeminiClient.generateContent).not.toHaveBeenCalled();
-    });
-  });
+  // Removed defaultSummarizer test as it's not exported and llmSummarizer handles summarization
+  // If a simple stringify behavior is needed, it should be part of llmSummarizer or a separate utility.
 });

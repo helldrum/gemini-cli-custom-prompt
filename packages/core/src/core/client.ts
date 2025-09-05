@@ -51,6 +51,10 @@ import type { IdeContext, File } from '../ide/types.js';
 import { handleFallback } from '../fallback/handler.js';
 import type { RoutingContext } from '../routing/routingStrategy.js';
 import { debugLogger } from '../utils/debugLogger.js';
+import {
+  COMPRESSION_PRESERVE_THRESHOLD,
+  DEFAULT_COMPRESSION_TOKEN_THRESHOLD as COMPRESSION_TOKEN_THRESHOLD,
+} from '../services/chatCompressionService.js';
 
 export function isThinkingSupported(model: string) {
   return model.startsWith('gemini-2.5') || model === DEFAULT_GEMINI_MODEL_AUTO;
@@ -187,9 +191,8 @@ export class GeminiClient {
 
     try {
       const userMemory = this.config.getUserMemory();
-      const systemInstruction = getCoreSystemPrompt(this.config, userMemory);
+      const systemInstruction = getCoreSystemPrompt(userMemory);
       const model = this.config.getModel();
-
       const config: GenerateContentConfig = { ...this.generateContentConfig };
 
       if (isThinkingSupported(model)) {
@@ -434,7 +437,8 @@ export class GeminiClient {
     );
 
     const remainingTokenCount =
-      tokenLimit(modelForLimitCheck) - this.getChat().getLastPromptTokenCount();
+      tokenLimit(modelForLimitCheck) -
+      uiTelemetryService.getLastPromptTokenCount();
 
     if (estimatedRequestTokenCount > remainingTokenCount * 0.95) {
       yield {
@@ -602,7 +606,7 @@ export class GeminiClient {
 
     try {
       const userMemory = this.config.getUserMemory();
-      const systemInstruction = getCoreSystemPrompt(this.config, userMemory);
+      const systemInstruction = getCoreSystemPrompt(userMemory);
 
       const requestConfig: GenerateContentConfig = {
         abortSignal,
@@ -691,3 +695,8 @@ export class GeminiClient {
     return info;
   }
 }
+
+export const TEST_ONLY = {
+  COMPRESSION_PRESERVE_THRESHOLD,
+  COMPRESSION_TOKEN_THRESHOLD,
+};

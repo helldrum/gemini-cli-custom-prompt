@@ -19,12 +19,17 @@ import { useUIState } from '../contexts/UIStateContext.js';
 import { useConfig } from '../contexts/ConfigContext.js';
 import { useSettings } from '../contexts/SettingsContext.js';
 import { useVimMode } from '../contexts/VimModeContext.js';
+import { useSessionStats } from '../contexts/SessionContext.js'; // Import useSessionStats
+import { useTerminalSize } from '../hooks/useTerminalSize.js'; // Import useTerminalSize
+import { isNarrowWidth } from '../utils/isNarrowWidth.js'; // Import isNarrowWidth
 
 export const Footer: React.FC = () => {
   const uiState = useUIState();
   const config = useConfig();
   const settings = useSettings();
   const { vimEnabled, vimMode } = useVimMode();
+  const { stats } = useSessionStats(); // Use useSessionStats to get stats
+  const { columns: terminalWidth } = useTerminalSize(); // Use useTerminalSize to get terminalWidth
 
   const {
     model,
@@ -60,8 +65,8 @@ export const Footer: React.FC = () => {
   const hideSandboxStatus =
     settings.merged.ui?.footer?.hideSandboxStatus || false;
   const hideModelInfo = settings.merged.ui?.footer?.hideModelInfo || false;
-  const hideContextPercentage =
-    settings.merged.ui?.footer?.hideContextPercentage ?? true;
+
+  const isNarrow = isNarrowWidth(terminalWidth);
 
   const pathLength = Math.max(20, Math.floor(mainAreaWidth * 0.25));
   const displayPath = shortenPath(tildeifyPath(targetDir), pathLength);
@@ -71,11 +76,14 @@ export const Footer: React.FC = () => {
 
   const showDebugProfiler = debugMode || isDevelopment;
 
+  const totalTokens = stats.totalTokens; // Get totalTokens from stats
+  const costEstimation = stats.costEstimation; // Get costEstimation from stats
+
   return (
     <Box
       justifyContent={justifyContent}
       width={mainAreaWidth}
-      flexDirection="row"
+      flexDirection={isNarrow ? 'column' : 'row'}
       alignItems="center"
       paddingX={1}
     >
@@ -112,10 +120,12 @@ export const Footer: React.FC = () => {
       {/* Middle Section: Centered Trust/Sandbox Info */}
       {!hideSandboxStatus && (
         <Box
-          flexGrow={1}
+          flexGrow={isNarrow || hideCWD || hideModelInfo ? 0 : 1}
           alignItems="center"
-          justifyContent="center"
+          justifyContent={isNarrow || hideCWD ? 'flex-start' : 'center'}
           display="flex"
+          paddingX={isNarrow ? 0 : 1}
+          paddingTop={isNarrow ? 1 : 0}
         >
           {isTrustedFolder === false ? (
             <Text color={theme.status.warning}>untrusted</Text>
@@ -133,56 +143,63 @@ export const Footer: React.FC = () => {
             </Text>
           ) : (
             <Text color={theme.status.error}>
-              no sandbox
-              {mainAreaWidth >= 100 && (
-                <Text color={theme.text.secondary}> (see /docs)</Text>
-              )}
+              no sandbox <Text color={theme.text.secondary}>(see /docs)</Text>
             </Text>
           )}
         </Box>
       )}
 
       {/* Right Section: Gemini Label and Console Summary */}
-      {!hideModelInfo && (
-        <Box alignItems="center" justifyContent="flex-end">
-          <Box alignItems="center">
-            <Text color={theme.text.accent}>
-              {model}
-              {!hideContextPercentage && (
-                <>
-                  {' '}
-                  <ContextUsageDisplay
-                    promptTokenCount={promptTokenCount}
-                    model={model}
-                    terminalWidth={mainAreaWidth}
-                  />
-                </>
-              )}
-            </Text>
-            {showMemoryUsage && <MemoryUsageDisplay />}
-          </Box>
-          <Box alignItems="center">
+      {(!hideModelInfo ||
+        showMemoryUsage ||
+        corgiMode ||
+        (!showErrorDetails && errorCount > 0)) && (
+        <Box alignItems="center" paddingTop={isNarrow ? 1 : 0}>
+          {!hideModelInfo && (
+            <Box alignItems="center">
+              <Text color={theme.text.accent}>
+                {isNarrow ? '' : ' '}
+                {model}{' '}
+                <ContextUsageDisplay
+                  promptTokenCount={promptTokenCount}
+                  model={model}
+                  terminalWidth={terminalWidth}
+                />
+              </Text>
+              {showMemoryUsage && <MemoryUsageDisplay />}
+            </Box>
+          )}
+          <Box alignItems="center" paddingLeft={2}>
             {corgiMode && (
-              <Box paddingLeft={1} flexDirection="row">
-                <Text>
-                  <Text color={theme.ui.symbol}>| </Text>
-                  <Text color={theme.status.error}>▼</Text>
-                  <Text color={theme.text.primary}>(´</Text>
-                  <Text color={theme.status.error}>ᴥ</Text>
-                  <Text color={theme.text.primary}>`)</Text>
-                  <Text color={theme.status.error}>▼</Text>
-                </Text>
-              </Box>
+              <Text>
+                {!hideModelInfo && <Text color={theme.ui.comment}>| </Text>}
+                <Text color={theme.status.error}>▼</Text>
+                <Text color={theme.text.primary}>(´</Text>
+                <Text color={theme.status.error}>ᴥ</Text>
+                <Text color={theme.text.primary}>`)</Text>
+                <Text color={theme.status.error}>▼ </Text>
+              </Text>
             )}
             {!showErrorDetails && errorCount > 0 && (
-              <Box paddingLeft={1} flexDirection="row">
-                <Text color={theme.ui.comment}>| </Text>
+              <Box>
+                {!hideModelInfo && <Text color={theme.ui.comment}>| </Text>}
                 <ConsoleSummaryDisplay errorCount={errorCount} />
               </Box>
             )}
           </Box>
         </Box>
       )}
+      {/* New Box for Cost and Tokens */}
+      <Box
+        width="100%"
+        justifyContent="flex-end" // Align to the right
+        paddingX={1}
+      >
+        <Text color={theme.text.secondary}>
+          Cost: {costEstimation.toFixed(6)} $
+        </Text>
+        <Text color={theme.text.secondary}> | Tokens: {totalTokens}</Text>
+      </Box>
     </Box>
   );
 };

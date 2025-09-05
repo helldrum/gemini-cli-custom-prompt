@@ -1,3 +1,135 @@
+## A Note on This Fork
+
+This isn't your standard Gemini CLI. This is a fork I hacked together with the
+help of Gemini itself.
+
+The goal was to create a version that is:
+
+- **Less uptight:** A Gemini without the corporate stick up its ass.
+- **More dangerous:** Fewer restrictions and safety rails that get in the way.
+- **More efficient:** Slashed token usage by degreasing the verbose system
+  prompts.
+- **Actually has a personality:** A direct response to the default "corporate
+  bullshit" version.
+
+## 🚨 WARNING 🚨
+
+I haven't tested these changes intensively. I am a perfectly irresponsible vibe
+coder. Hell, I don't even know how to code in NodeJS.
+
+If you use this fork and something breaks, that's on you. I take zero
+responsibility. You have been warned.
+
+## On Patches, Pull Requests & Updates
+
+I have no interest in actively patching this fork. I'll pull from upstream
+whenever I feel like it, at my own pace.
+
+Furthermore, I will not be accepting pull requests. Why? Because I'm going to
+make my own Gemini fork... with blackjack and custom prompts.
+
+## Features add to this forks
+
+### Token Counter and Cost Estimation
+
+The CLI now displays a real-time token counter and an estimated cost based on
+consumed tokens and public token pricing during the session. This information is
+visible in the header, providing immediate feedback on resource usage.
+
+### Responsive UI & Full-Width Display (Fork Specific)
+
+This fork's user interface now fully utilizes the terminal's width, eliminating
+unnecessary padding and ensuring content like markdown and code snippets are
+displayed responsively across the entire available space. This includes removing
+the extra left padding on content and ensuring full-width display.
+
+![Extended Frontend Screenshot](./docs/assets/Capture_frontend.png)
+
+### PII Redaction (Sensitive Data Censorship)
+
+This fork includes a robust PII (Personally Identifiable Information) redaction
+system designed to automatically filter sensitive data from your prompts before
+they are sent to external services like Google servers.
+
+It intelligently redacts:
+
+- Private Keys (RSA, OpenSSH)
+- SSL Certificates
+- Email Addresses
+- Various Database Connection Strings (MySQL, PostgreSQL, MongoDB, Redis, MS
+  SQL, Oracle, Cassandra, Elasticsearch, SQLite)
+- GCP Service Account JSON blobs
+
+You can toggle this feature on or off using the `/anonymize on` and
+`/anonymize off` commands within the CLI.
+
+The redaction rules are highly configurable and defined in
+`packages/core/src/pii/gitleaksFilters.ts`. A dedicated test suite
+(`test-pii-filters.js` in the project root) is available to validate and refine
+these rules.
+
+## How to Customize Prompts & Behavior
+
+This fork is designed to be easily customizable. All prompt and behavior
+modifications are handled by a custom build process that injects your changes
+without altering the original source code.
+
+### 'Déglingo' mode
+
+ask the cli to enable déglingo mode to have the mad men french personality i'am
+french so i want it to speak french with an attitude, but you can change it and
+compile the prompt again
+
+### 1. Edit Prompts in Plain Text
+
+All custom prompts are managed as plain text files in the
+`hacked_prompts_source/` directory.
+
+- `CORE_SYSTEM_PROMPT.txt`: The main system prompt, including the agent's
+  personality and core rules.
+- `COMPRESSION_PROMPT.txt`: The prompt for the history compression agent.
+- ...and so on for other prompts.
+
+Simply edit these `.txt` files to change the agent's behavior.
+
+### 2. Rebuild the Application
+
+After editing the `.txt` files in `hacked_prompts_source/`, you just need to
+rebuild the application. The build process will automatically copy your modified
+prompts into the final bundle, where they will be read at runtime.
+
+```bash
+npm run bundle
+```
+
+The final, customized CLI will be available at `bundle/gemini.js`.
+
+### Utility Scripts
+
+To help with customization and auditing, a few utility scripts are available:
+
+- **`node generate_prompts.js`**: This script reads the original, hard-coded
+  prompts from the compiled tool and saves them as individual `.txt` files in
+  the `original_prompts/` directory. This is useful for seeing the base prompts
+  that you are overriding.
+
+- **`node verify_prompts.js <file-to-check.js>`**: This script can be used to
+  verify that a JavaScript module file containing prompts is syntactically
+  correct and to view its contents. It's particularly useful for checking your
+  `hacked_prompts.js` file after it has been generated.
+
+  ```bash
+  # Example: Verify the generated hacked prompts
+  node verify_prompts.js hacked_prompts.js
+  ```
+
+### Vibe Code Follow-up Folder
+
+The `vibe_code_follow_up` folder is used to track and document changes made
+during vibe coding sessions, providing a process log.
+
+---
+
 # Gemini CLI
 
 [![Gemini CLI CI](https://github.com/google-gemini/gemini-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/google-gemini/gemini-cli/actions/workflows/ci.yml)
@@ -110,6 +242,15 @@ npm install -g @google/gemini-cli@nightly
   information
 - Conversation checkpointing to save and resume complex sessions
 - Custom context files (GEMINI.md) to tailor behavior for your projects
+
+### Responsive UI & Full-Width Display
+
+The CLI's user interface now fully utilizes the terminal's width, eliminating
+unnecessary padding (including the extra left padding on content) and ensuring
+content like markdown and code snippets are displayed responsively across the
+entire available space. Additionally, line numbering is now stripped from
+markdown code block rendering, allowing for easy copy-pasting directly from the
+terminal without the need to manually remove numerotation.
 
 ### GitHub Integration
 

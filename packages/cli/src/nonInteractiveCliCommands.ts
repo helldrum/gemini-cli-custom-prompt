@@ -56,6 +56,8 @@ export const handleSlashCommand = async (
         metrics: uiTelemetryService.getMetrics(),
         lastPromptTokenCount: 0,
         promptCount: 1,
+        totalTokens: 0,
+        costEstimation: 0,
       };
 
       const logger = new Logger(config?.getSessionId() || '', config?.storage);
