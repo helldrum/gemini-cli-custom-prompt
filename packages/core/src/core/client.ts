@@ -51,6 +51,10 @@ import type { IdeContext, File } from '../ide/types.js';
 import { handleFallback } from '../fallback/handler.js';
 import type { RoutingContext } from '../routing/routingStrategy.js';
 import { debugLogger } from '../utils/debugLogger.js';
+import {
+  COMPRESSION_PRESERVE_THRESHOLD,
+  DEFAULT_COMPRESSION_TOKEN_THRESHOLD as COMPRESSION_TOKEN_THRESHOLD,
+} from '../services/chatCompressionService.js';
 
 export function isThinkingSupported(model: string) {
   return model.startsWith('gemini-2.5') || model === DEFAULT_GEMINI_MODEL_AUTO;
@@ -324,13 +328,13 @@ export class GeminiClient {
             path: currentActiveFile.path,
             cursor: currentActiveFile.cursor
               ? {
-                  line: currentActiveFile.cursor.line,
-                  character: currentActiveFile.cursor.character,
-                }
-              : undefined,
-            selectedText: currentActiveFile.selectedText || undefined,
-          };
-        } else {
+                line: currentActiveFile.cursor.line,
+                character: currentActiveFile.cursor.character,
+              }
+            : undefined,
+          selectedText: currentActiveFile.selectedText || undefined,
+        };
+      } else {
           const lastCursor = lastActiveFile.cursor;
           const currentCursor = currentActiveFile.cursor;
           if (
@@ -393,7 +397,7 @@ export class GeminiClient {
     }
 
     const configModel = this.config.getModel();
-    const model: string =
+    const model: string = 
       configModel === DEFAULT_GEMINI_MODEL_AUTO
         ? DEFAULT_GEMINI_MODEL
         : configModel;
@@ -433,11 +437,12 @@ export class GeminiClient {
       JSON.stringify(request).length / 4,
     );
 
-    const remainingTokenCount =
-      tokenLimit(modelForLimitCheck) - this.getChat().getLastPromptTokenCount();
+    const remainingTokenCount = 
+      tokenLimit(modelForLimitCheck) -
+      uiTelemetryService.getLastPromptTokenCount();
 
     if (estimatedRequestTokenCount > remainingTokenCount * 0.95) {
-      yield {
+      yield { 
         type: GeminiEventType.ContextWindowWillOverflow,
         value: { estimatedRequestTokenCount, remainingTokenCount },
       };
@@ -456,9 +461,9 @@ export class GeminiClient {
     // in the conversation history . The IDE context is not discarded; it will
     // be included in the next regular message sent to the model.
     const history = this.getHistory();
-    const lastMessage =
+    const lastMessage = 
       history.length > 0 ? history[history.length - 1] : undefined;
-    const hasPendingToolCall =
+    const hasPendingToolCall = 
       !!lastMessage &&
       lastMessage.role === 'model' &&
       (lastMessage.parts?.some((p) => 'functionCall' in p) || false);
@@ -691,3 +696,8 @@ export class GeminiClient {
     return info;
   }
 }
+
+export const TEST_ONLY = {
+  COMPRESSION_PRESERVE_THRESHOLD,
+  COMPRESSION_TOKEN_THRESHOLD,
+};

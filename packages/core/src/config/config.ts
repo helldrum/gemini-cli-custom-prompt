@@ -217,6 +217,7 @@ export interface SandboxConfig {
 }
 
 export interface ConfigParameters {
+  anonymization?: boolean;
   sessionId: string;
   embeddingModel?: string;
   sandbox?: SandboxConfig;
@@ -387,6 +388,7 @@ export class Config {
   private readonly fileExclusions: FileExclusions;
   private readonly eventEmitter?: EventEmitter;
   private readonly useSmartEdit: boolean;
+  private anonymizationEnabled: boolean;
   private readonly useWriteTodos: boolean;
   private readonly messageBus: MessageBus;
   private readonly policyEngine: PolicyEngine;
@@ -410,6 +412,7 @@ export class Config {
   private experimentsPromise: Promise<void> | undefined;
 
   constructor(params: ConfigParameters) {
+    this.anonymizationEnabled = params.anonymization ?? true;
     this.sessionId = params.sessionId;
     this.embeddingModel =
       params.embeddingModel ?? DEFAULT_GEMINI_EMBEDDING_MODEL;
@@ -1206,6 +1209,14 @@ export class Config {
 
   getUseSmartEdit(): boolean {
     return this.useSmartEdit;
+  }
+
+  isAnonymizationEnabled(): boolean {
+    return this.anonymizationEnabled;
+  }
+
+  setAnonymizationEnabled(enabled: boolean): void {
+    this.anonymizationEnabled = enabled;
   }
 
   getUseWriteTodos(): boolean {

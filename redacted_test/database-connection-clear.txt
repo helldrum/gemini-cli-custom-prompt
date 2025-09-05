@@ -1,0 +1,33 @@
+# MySQL
+
+SOMETHING_GOOD: mysql://user:password@mysql.example.com:3306/database
+SOMETHING_GOOD=mysql://user:password@mysql.example.com:3306/database
+this is my db string -> mysql://user@mysql.example.com/database
+
+# PostgreSQL
+postgresql://user:secret@postgres.example.com:5432/database
+postgres://postgres.example.com/database
+
+# MongoDB
+mongodb://user:pass@mongo.example.com:27017/database
+mongodb+srv://user:pass@cluster.mongodb.net/database?retryWrites=true&w=majority
+
+# Redis
+redis://:pAsSwOrD@redis.example.com:6379
+redis://redis.example.com:6379
+
+# MS SQL Server
+mssql://user:StrongP@ss!@mssql.example.com:1433/database
+sqlserver://server.database.windows.net/database
+
+# SQLite 
+sqlite:///path/to/my/database.sqlite
+
+# Oracle
+jdbc:oracle:thin:user/password@oracle.example.com:1521:ORCL
+jdbc:oracle:thin:@oracle.example.com:1521:ORCL
+
+# Cassandra
+cassandra://user:pass@cassandra.example.com:9042/my_keyspace
+cassandra://cassandra.example.com:9042/my_keyspace
+

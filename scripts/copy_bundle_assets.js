@@ -17,7 +17,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { copyFileSync, existsSync, mkdirSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, cpSync } from 'node:fs';
 import { dirname, join, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { glob } from 'glob';
@@ -35,6 +35,14 @@ if (!existsSync(bundleDir)) {
 const sbFiles = glob.sync('packages/**/*.sb', { cwd: root });
 for (const file of sbFiles) {
   copyFileSync(join(root, file), join(bundleDir, basename(file)));
+}
+
+// Copy the hacked_prompts_source directory
+const hackedPromptsDir = join(root, 'hacked_prompts_source');
+if (existsSync(hackedPromptsDir)) {
+  cpSync(hackedPromptsDir, join(bundleDir, 'hacked_prompts_source'), {
+    recursive: true,
+  });
 }
 
 console.log('Assets copied to bundle/');

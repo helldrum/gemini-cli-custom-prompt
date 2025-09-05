@@ -22,6 +22,8 @@ export interface JsonOutput {
   response?: string;
   stats?: SessionMetrics;
   error?: JsonError;
+  totalTokens?: number;
+  costEstimation?: number;
 }
 
 // Streaming JSON event types

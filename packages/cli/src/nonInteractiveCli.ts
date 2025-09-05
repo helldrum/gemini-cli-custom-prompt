@@ -411,7 +411,29 @@ export async function runNonInteractive({
           } else if (config.getOutputFormat() === OutputFormat.JSON) {
             const formatter = new JsonFormatter();
             const stats = uiTelemetryService.getMetrics();
-            textOutput.write(formatter.format(responseText, stats));
+            const totalTokens = Object.values(stats.models).reduce(
+              (acc, modelMetrics) => acc + modelMetrics.tokens.total,
+              0,
+            );
+            const costEstimation = Object.values(stats.models).reduce(
+              (acc, modelMetrics) => {
+                const inputCost =
+                  (modelMetrics.tokens.prompt / 1_000_000) * 1.25;
+                const outputCost =
+                  (modelMetrics.tokens.candidates / 1_000_000) * 10;
+                return acc + inputCost + outputCost;
+              },
+              0,
+            );
+            textOutput.write(
+              formatter.format(
+                responseText,
+                stats,
+                undefined,
+                totalTokens,
+                costEstimation,
+              ),
+            );
           } else {
             textOutput.ensureTrailingNewline(); // Ensure a final newline
           }
