@@ -157,7 +157,7 @@ export abstract class DeclarativeTool<
     readonly description: string,
     readonly kind: Kind,
     readonly parameterSchema: unknown,
-    readonly isOutputMarkdown: boolean = true,
+    readonly isOutputMarkdown: boolean = false,
     readonly canUpdateOutput: boolean = false,
   ) {}
 

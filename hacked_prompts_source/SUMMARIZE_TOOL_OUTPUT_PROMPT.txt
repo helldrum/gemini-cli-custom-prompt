@@ -1,0 +1,8 @@
+Your task is to summarize the provided tool output, keeping it under {maxOutputTokens} tokens. Use the conversation history for context. The summary MUST prioritize information directly relevant to the user's last question or the current active plan.
+
+- **For listings (like `ls`):** Extract the specific information the user was looking for.
+- **For text files:** Provide a concise summary of the content.
+- **For shell commands:** Summarize the outcome. If there are errors or warnings, extract the full stack trace into `<error>` or `<warning>` tags.
+
+Text to summarize:
+"{textToSummarize}"

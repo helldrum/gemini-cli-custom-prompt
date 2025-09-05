@@ -8,6 +8,7 @@ import React from 'react';
 import { Text, Box } from 'ink';
 import { EOL } from 'node:os';
 import { theme } from '../semantic-colors.js';
+import { themeManager } from '../themes/theme-manager.js';
 import { colorizeCode } from './CodeColorizer.js';
 import { TableRenderer } from './TableRenderer.js';
 import { RenderInline } from './InlineMarkdownRenderer.js';
@@ -301,6 +302,10 @@ const RenderCodeBlockInternal: React.FC<RenderCodeBlockProps> = ({
   terminalWidth,
 }) => {
   const settings = useSettings();
+  const themeFromSettings = settings.merged.ui?.theme
+    ? themeManager.findThemeByName(settings.merged.ui.theme)
+    : undefined;
+  const activeTheme = themeFromSettings || themeManager.getActiveTheme();
   const MIN_LINES_FOR_MESSAGE = 1; // Minimum lines to show before the "generating more" message
   const RESERVED_LINES = 2; // Lines reserved for the message itself and potential padding
 
@@ -327,8 +332,7 @@ const RenderCodeBlockInternal: React.FC<RenderCodeBlockProps> = ({
         lang,
         availableTerminalHeight,
         terminalWidth - CODE_BLOCK_PREFIX_PADDING,
-        undefined,
-        settings,
+        activeTheme,
       );
       return (
         <Box paddingLeft={CODE_BLOCK_PREFIX_PADDING} flexDirection="column">
@@ -345,8 +349,7 @@ const RenderCodeBlockInternal: React.FC<RenderCodeBlockProps> = ({
     lang,
     availableTerminalHeight,
     terminalWidth - CODE_BLOCK_PREFIX_PADDING,
-    undefined,
-    settings,
+    activeTheme,
   );
 
   return (

@@ -47,6 +47,10 @@ export const Composer = () => {
     [uiState.terminalWidth],
   );
 
+  const consumedTokens = Object.values(
+    uiState.sessionStats.metrics.models,
+  ).reduce((acc, modelMetrics) => acc + modelMetrics.tokens.total, 0);
+
   // Build footer props from context values
   const footerProps: Omit<FooterProps, 'vimMode'> = {
     model: config.getModel(),
@@ -65,6 +69,7 @@ export const Composer = () => {
     hideCWD: settings.merged.ui?.footer?.hideCWD || false,
     hideSandboxStatus: settings.merged.ui?.footer?.hideSandboxStatus || false,
     hideModelInfo: settings.merged.ui?.footer?.hideModelInfo || false,
+    consumedTokens: consumedTokens,
   };
 
   return (

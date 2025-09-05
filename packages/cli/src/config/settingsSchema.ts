@@ -340,7 +340,7 @@ const SETTINGS_SCHEMA = {
         requiresRestart: false,
         default: false,
         description: 'Show line numbers in the chat.',
-        showInDialog: true,
+        showInDialog: false,
       },
       showCitations: {
         type: 'boolean',

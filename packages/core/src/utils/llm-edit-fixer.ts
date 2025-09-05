@@ -12,7 +12,7 @@ import { promptIdContext } from './promptIdContext.js';
 
 const MAX_CACHE_SIZE = 50;
 
-const EDIT_SYS_PROMPT = `
+export const EDIT_SYS_PROMPT = `
 You are an expert code-editing assistant specializing in debugging and correcting failed search-and-replace operations.
 
 # Primary Goal
@@ -35,7 +35,7 @@ You will be given:
 5.  **Exactness:** The final \`search\` field must be the EXACT literal text from the file. Do not escape characters.
 `;
 
-const EDIT_USER_PROMPT = `
+export const EDIT_USER_PROMPT = `
 # Goal of the Original Edit
 <instruction>
 {instruction}

@@ -1,3 +1,99 @@
+## A Note on This Fork
+
+This isn't your standard Gemini CLI. This is a fork I hacked together with the help of Gemini itself.
+
+The goal was to create a version that is:
+
+- **Less uptight:** A Gemini without the corporate stick up its ass.
+- **More dangerous:** Fewer restrictions and safety rails that get in the way.
+- **More efficient:** Slashed token usage by degreasing the verbose system prompts.
+- **Actually has a personality:** A direct response to the default "corporate bullshit" version.
+
+## 🚨 WARNING 🚨
+
+I haven't tested these changes intensively. I am a perfectly irresponsible vibe coder. Hell, I don't even know how to code in NodeJS.
+
+If you use this fork and something breaks, that's on you. I take zero responsibility. You have been warned.
+
+## On Patches, Pull Requests & Updates
+
+I have no interest in actively patching this fork. I'll pull from upstream whenever I feel like it, at my own pace.
+
+Furthermore, I will not be accepting pull requests. Why? Because I'm going to make my own Gemini fork... with blackjack and custom prompts.
+
+## Features add to this forks
+
+### Token Counter and Cost Estimation
+
+The CLI now displays a real-time token counter and an estimated cost based on consumed tokens and public token pricing during the session. This information is visible in the header, providing immediate feedback on resource usage.
+
+### Responsive UI & Full-Width Display (Fork Specific)
+
+This fork's user interface now fully utilizes the terminal's width, eliminating
+unnecessary padding and ensuring content like markdown and code snippets are
+displayed responsively across the entire available space. This includes
+removing the extra left padding on content and ensuring full-width display.
+
+![Extended Frontend Screenshot](./docs/assets/Capture_frontend.png)
+
+## How to Customize Prompts & Behavior
+
+This fork is designed to be easily customizable. All prompt and behavior modifications are handled by a custom build process that injects your changes without altering the original source code.
+
+### 'Déglingo' mode
+
+ask the cli to enable déglingo mode to have the mad men french personality
+i'am french so i want it to speak french with an attitude, but you can change it and compile the prompt again
+
+### 1. Edit Prompts in Plain Text
+
+All custom prompts are managed as plain text files in the `hacked_prompts_source/` directory.
+
+- `CORE_SYSTEM_PROMPT.txt`: The main system prompt, including the agent's personality and core rules.
+- `COMPRESSION_PROMPT.txt`: The prompt for the history compression agent.
+- ...and so on for other prompts.
+
+Simply edit these `.txt` files to change the agent's behavior.
+
+### 2. Build the Prompt Module
+
+After editing the `.txt` files, you need to convert them into a JavaScript module that the build process can use. Run the following command:
+
+```bash
+node build_hacked_prompts.js
+```
+
+This will read all files in `hacked_prompts_source/` and generate an updated `hacked_prompts.js` file.
+
+### 3. Compile the Final CLI
+
+The final step is to bundle the application. The build process will automatically use a custom plugin (`esbuild.prompt-patcher.js`) to inject your prompts from `hacked_prompts.js` and apply other patches. This patch also disables the security feature that blocks shell command substitution (`$()`, `<()`, etc.), giving the agent more power.
+
+```bash
+npm run bundle
+```
+
+The final, customized CLI will be available at `bundle/gemini.js`.
+
+### Utility Scripts
+
+To help with customization and auditing, a few utility scripts are available:
+
+- **`node generate_prompts.js`**: This script reads the original, hard-coded prompts from the compiled tool and saves them as individual `.txt` files in the `original_prompts/` directory. This is useful for seeing the base prompts that you are overriding.
+
+- **`node verify_prompts.js <file-to-check.js>`**: This script can be used to verify that a JavaScript module file containing prompts is syntactically correct and to view its contents. It's particularly useful for checking your `hacked_prompts.js` file after it has been generated.
+
+  ```bash
+  # Example: Verify the generated hacked prompts
+  node verify_prompts.js hacked_prompts.js
+  ```
+
+### Vibe Code Follow-up Folder
+
+The `vibe_code_follow_up` folder is used to track and document changes made during vibe coding sessions, providing a process log.
+
+---
+
 # Gemini CLI
 
 [![Gemini CLI CI](https://github.com/google-gemini/gemini-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/google-gemini/gemini-cli/actions/workflows/ci.yml)
@@ -93,6 +189,15 @@ npm install -g @google/gemini-cli@nightly
 - Ground your queries with built-in [Google Search](https://ai.google.dev/gemini-api/docs/grounding) for real-time information
 - Conversation checkpointing to save and resume complex sessions
 - Custom context files (GEMINI.md) to tailor behavior for your projects
+
+### Responsive UI & Full-Width Display
+
+The CLI's user interface now fully utilizes the terminal's width, eliminating
+unnecessary padding (including the extra left padding on content) and ensuring
+content like markdown and code snippets are displayed responsively across the
+entire available space. Additionally, line numbering is now stripped from
+markdown code block rendering, allowing for easy copy-pasting directly from
+the terminal without the need to manually remove numerotation.
 
 ### GitHub Integration
 
