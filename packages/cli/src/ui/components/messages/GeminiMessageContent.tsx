@@ -26,18 +26,13 @@ export const GeminiMessageContent: React.FC<GeminiMessageContentProps> = ({
   isPending,
   availableTerminalHeight,
   terminalWidth,
-}) => {
-  const originalPrefix = '✦ ';
-  const prefixWidth = originalPrefix.length;
-
-  return (
-    <Box flexDirection="column" paddingLeft={prefixWidth}>
-      <MarkdownDisplay
-        text={text}
-        isPending={isPending}
-        availableTerminalHeight={availableTerminalHeight}
-        terminalWidth={terminalWidth}
-      />
-    </Box>
-  );
-};
+}) => (
+  <Box flexDirection="column">
+    <MarkdownDisplay
+      text={text}
+      isPending={isPending}
+      availableTerminalHeight={availableTerminalHeight}
+      terminalWidth={terminalWidth}
+    />
+  </Box>
+);

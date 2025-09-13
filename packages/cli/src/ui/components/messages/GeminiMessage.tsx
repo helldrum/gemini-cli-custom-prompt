@@ -5,10 +5,8 @@
  */
 
 import type React from 'react';
-import { Text, Box } from 'ink';
+import { Box } from 'ink';
 import { MarkdownDisplay } from '../../utils/MarkdownDisplay.js';
-import { theme } from '../../semantic-colors.js';
-import { SCREEN_READER_MODEL_PREFIX } from '../../textConstants.js';
 
 interface GeminiMessageProps {
   text: string;
@@ -22,25 +20,13 @@ export const GeminiMessage: React.FC<GeminiMessageProps> = ({
   isPending,
   availableTerminalHeight,
   terminalWidth,
-}) => {
-  const prefix = '✦ ';
-  const prefixWidth = prefix.length;
-
-  return (
-    <Box flexDirection="row">
-      <Box width={prefixWidth}>
-        <Text color={theme.text.accent} aria-label={SCREEN_READER_MODEL_PREFIX}>
-          {prefix}
-        </Text>
-      </Box>
-      <Box flexGrow={1} flexDirection="column">
-        <MarkdownDisplay
-          text={text}
-          isPending={isPending}
-          availableTerminalHeight={availableTerminalHeight}
-          terminalWidth={terminalWidth}
-        />
-      </Box>
-    </Box>
-  );
-};
+}) => (
+  <Box flexDirection="column">
+    <MarkdownDisplay
+      text={text}
+      isPending={isPending}
+      availableTerminalHeight={availableTerminalHeight}
+      terminalWidth={terminalWidth}
+    />
+  </Box>
+);

@@ -333,15 +333,7 @@ const SETTINGS_SCHEMA = {
         description: 'Display memory usage information in the UI',
         showInDialog: true,
       },
-      showLineNumbers: {
-        type: 'boolean',
-        label: 'Show Line Numbers',
-        category: 'UI',
-        requiresRestart: false,
-        default: false,
-        description: 'Show line numbers in the chat.',
-        showInDialog: true,
-      },
+
       showCitations: {
         type: 'boolean',
         label: 'Show Citations',

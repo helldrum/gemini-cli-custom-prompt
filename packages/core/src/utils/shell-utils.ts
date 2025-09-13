@@ -312,17 +312,6 @@ export function checkCommandPermissions(
   blockReason?: string;
   isHardDenial?: boolean;
 } {
-  // Disallow command substitution for security.
-  if (detectCommandSubstitution(command)) {
-    return {
-      allAllowed: false,
-      disallowedCommands: [command],
-      blockReason:
-        'Command substitution using $(), <(), or >() is not allowed for security reasons',
-      isHardDenial: true,
-    };
-  }
-
   const normalize = (cmd: string): string => cmd.trim().replace(/\s+/g, ' ');
   const commandsToValidate = splitCommands(command).map(normalize);
   const invocation: AnyToolInvocation & { params: { command: string } } = {

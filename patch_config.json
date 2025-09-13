@@ -6,7 +6,7 @@
   },
   {
     "targetFile": "packages/core/src/core/prompts.ts",
-    "variableName": "gitRules", 
+    "variableName": "gitRules",
     "promptKey": "git_rules"
   },
   {

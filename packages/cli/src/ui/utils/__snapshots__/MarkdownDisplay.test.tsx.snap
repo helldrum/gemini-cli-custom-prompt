@@ -23,8 +23,6 @@ exports[`<MarkdownDisplay /> > handles a table at the end of the input 1`] = `
 
 exports[`<MarkdownDisplay /> > handles unclosed (pending) code blocks 1`] = `" 1 let y = 2;"`;
 
-exports[`<MarkdownDisplay /> > hides line numbers in code blocks when showLineNumbers is false 1`] = `" const x = 1;"`;
-
 exports[`<MarkdownDisplay /> > inserts a single space between paragraphs 1`] = `
 "Paragraph 1.
 

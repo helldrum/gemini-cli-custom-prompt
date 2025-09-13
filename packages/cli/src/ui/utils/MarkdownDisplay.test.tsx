@@ -219,30 +219,6 @@ Another paragraph.
     expect(lastFrame()).toMatchSnapshot();
   });
 
-  it('hides line numbers in code blocks when showLineNumbers is false', () => {
-    const text = '```javascript\nconst x = 1;\n```'.replace(/\n/g, EOL);
-    const settings = new LoadedSettings(
-      { path: '', settings: {}, originalSettings: {} },
-      { path: '', settings: {}, originalSettings: {} },
-      {
-        path: '',
-        settings: { ui: { showLineNumbers: false } },
-        originalSettings: { ui: { showLineNumbers: false } },
-      },
-      { path: '', settings: {}, originalSettings: {} },
-      true,
-      new Set(),
-    );
-
-    const { lastFrame } = render(
-      <SettingsContext.Provider value={settings}>
-        <MarkdownDisplay {...baseProps} text={text} />
-      </SettingsContext.Provider>,
-    );
-    expect(lastFrame()).toMatchSnapshot();
-    expect(lastFrame()).not.toContain(' 1 ');
-  });
-
   it('shows line numbers in code blocks by default', () => {
     const text = '```javascript\nconst x = 1;\n```'.replace(/\n/g, EOL);
     const { lastFrame } = render(

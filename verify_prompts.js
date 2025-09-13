@@ -15,7 +15,7 @@ async function main() {
     // Resolve the relative path to an absolute path and convert to a file URL for dynamic import
     const absolutePath = path.resolve(filePath);
     const moduleUrl = pathToFileURL(absolutePath).href;
-    
+
     // Use dynamic import() to load the specified module
     const prompts = await import(moduleUrl);
 
@@ -33,7 +33,6 @@ async function main() {
     }
 
     console.log('--- VERIFICATION COMPLETE ---');
-
   } catch (error) {
     console.error(`Error loading or processing file: ${filePath}`);
     console.error(error);

@@ -11,7 +11,6 @@ import { theme } from '../semantic-colors.js';
 import { colorizeCode } from './CodeColorizer.js';
 import { TableRenderer } from './TableRenderer.js';
 import { RenderInline } from './InlineMarkdownRenderer.js';
-import { useSettings } from '../contexts/SettingsContext.js';
 
 interface MarkdownDisplayProps {
   text: string;
@@ -23,9 +22,7 @@ interface MarkdownDisplayProps {
 // Constants for Markdown parsing and rendering
 
 const EMPTY_LINE_HEIGHT = 1;
-const CODE_BLOCK_PREFIX_PADDING = 1;
-const LIST_ITEM_PREFIX_PADDING = 1;
-const LIST_ITEM_TEXT_FLEX_GROW = 1;
+const CODE_BLOCK_PREFIX_PADDING = 0; // Whitespace on the left of the code block
 
 const MarkdownDisplayInternal: React.FC<MarkdownDisplayProps> = ({
   text,
@@ -115,11 +112,9 @@ const MarkdownDisplayInternal: React.FC<MarkdownDisplayProps> = ({
       } else {
         // Not a table, treat as regular text
         addContentBlock(
-          <Box key={key}>
-            <Text wrap="wrap">
-              <RenderInline text={line} />
-            </Text>
-          </Box>,
+          <Text key={key} wrap="wrap">
+            <RenderInline text={line} />
+          </Text>,
         );
       }
     } else if (inTable && tableSeparatorMatch) {
@@ -154,11 +149,9 @@ const MarkdownDisplayInternal: React.FC<MarkdownDisplayProps> = ({
       // Process current line as normal
       if (line.trim().length > 0) {
         addContentBlock(
-          <Box key={key}>
-            <Text wrap="wrap">
-              <RenderInline text={line} />
-            </Text>
-          </Box>,
+          <Text key={key} wrap="wrap">
+            <RenderInline text={line} />
+          </Text>,
         );
       }
     } else if (hrMatch) {
@@ -300,7 +293,6 @@ const RenderCodeBlockInternal: React.FC<RenderCodeBlockProps> = ({
   availableTerminalHeight,
   terminalWidth,
 }) => {
-  const settings = useSettings();
   const MIN_LINES_FOR_MESSAGE = 1; // Minimum lines to show before the "generating more" message
   const RESERVED_LINES = 2; // Lines reserved for the message itself and potential padding
 
@@ -314,7 +306,7 @@ const RenderCodeBlockInternal: React.FC<RenderCodeBlockProps> = ({
       if (MAX_CODE_LINES_WHEN_PENDING < MIN_LINES_FOR_MESSAGE) {
         // Not enough space to even show the message meaningfully
         return (
-          <Box paddingLeft={CODE_BLOCK_PREFIX_PADDING}>
+          <Box>
             <Text color={theme.text.secondary}>
               ... code is being written ...
             </Text>
@@ -328,10 +320,9 @@ const RenderCodeBlockInternal: React.FC<RenderCodeBlockProps> = ({
         availableTerminalHeight,
         terminalWidth - CODE_BLOCK_PREFIX_PADDING,
         undefined,
-        settings,
       );
       return (
-        <Box paddingLeft={CODE_BLOCK_PREFIX_PADDING} flexDirection="column">
+        <Box flexDirection="column">
           {colorizedTruncatedCode}
           <Text color={theme.text.secondary}>... generating more ...</Text>
         </Box>
@@ -346,16 +337,10 @@ const RenderCodeBlockInternal: React.FC<RenderCodeBlockProps> = ({
     availableTerminalHeight,
     terminalWidth - CODE_BLOCK_PREFIX_PADDING,
     undefined,
-    settings,
   );
 
   return (
-    <Box
-      paddingLeft={CODE_BLOCK_PREFIX_PADDING}
-      flexDirection="column"
-      width={terminalWidth}
-      flexShrink={0}
-    >
+    <Box flexDirection="column" width={terminalWidth} flexShrink={0}>
       {colorizedCode}
     </Box>
   );
@@ -381,14 +366,11 @@ const RenderListItemInternal: React.FC<RenderListItemProps> = ({
   const indentation = leadingWhitespace.length;
 
   return (
-    <Box
-      paddingLeft={indentation + LIST_ITEM_PREFIX_PADDING}
-      flexDirection="row"
-    >
+    <Box paddingLeft={indentation} flexDirection="row">
       <Box width={prefixWidth}>
         <Text color={theme.text.primary}>{prefix}</Text>
       </Box>
-      <Box flexGrow={LIST_ITEM_TEXT_FLEX_GROW}>
+      <Box flexGrow={1}>
         <Text wrap="wrap" color={theme.text.primary}>
           <RenderInline text={itemText} />
         </Text>

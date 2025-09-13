@@ -92,7 +92,7 @@ const MIGRATION_MAP: Record<string, string> = {
   hideModelInfo: 'ui.footer.hideModelInfo',
   hideContextSummary: 'ui.hideContextSummary',
   showMemoryUsage: 'ui.showMemoryUsage',
-  showLineNumbers: 'ui.showLineNumbers',
+
   showCitations: 'ui.showCitations',
   ideMode: 'ide.enabled',
   includeDirectories: 'context.includeDirectories',
