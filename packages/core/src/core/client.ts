@@ -50,6 +50,7 @@ import type { IdeContext, File } from '../ide/types.js';
 import { handleFallback } from '../fallback/handler.js';
 import type { RoutingContext } from '../routing/routingStrategy.js';
 import { uiTelemetryService } from '../telemetry/uiTelemetry.js';
+import { customRules } from '../pii/gitleaksFilters.js';
 
 export function isThinkingSupported(model: string) {
   return model.startsWith('gemini-2.5') || model === DEFAULT_GEMINI_MODEL_AUTO;
@@ -440,12 +441,48 @@ export class GeminiClient {
     }
   }
 
+  private anonymizeRequest(request: PartListUnion): PartListUnion {
+    if (!Array.isArray(request)) {
+      // PartListUnion can be a string in some contexts, though less common.
+      if (typeof request === 'string') {
+        let redactedText = request;
+        for (const rule of customRules) {
+          redactedText = redactedText.replace(rule.pattern(), '[redacted]');
+        }
+        return redactedText;
+      }
+      return request;
+    }
+
+    // The type `Part` can be a string or an object with a `text` property.
+    return request.map((part) => {
+      if (typeof part === 'string') {
+        let redactedText = part;
+        for (const rule of customRules) {
+          redactedText = redactedText.replace(rule.pattern(), '[redacted]');
+        }
+        return redactedText;
+      }
+      if (part.text) {
+        let redactedText = part.text;
+        for (const rule of customRules) {
+          redactedText = redactedText.replace(rule.pattern(), '[redacted]');
+        }
+        return { ...part, text: redactedText };
+      }
+      return part;
+    });
+  }
+
   async *sendMessageStream(
     request: PartListUnion,
     signal: AbortSignal,
     prompt_id: string,
     turns: number = MAX_TURNS,
   ): AsyncGenerator<ServerGeminiStreamEvent, Turn> {
+    if (this.config.isAnonymizationEnabled()) {
+      request = this.anonymizeRequest(request);
+    }
     if (this.lastPromptId !== prompt_id) {
       this.loopDetector.reset(prompt_id);
       this.lastPromptId = prompt_id;
@@ -585,6 +622,12 @@ export class GeminiClient {
     abortSignal: AbortSignal,
     model: string,
   ): Promise<GenerateContentResponse> {
+    if (this.config.isAnonymizationEnabled()) {
+      contents = contents.map((content) => ({
+        ...content,
+        parts: this.anonymizeRequest(content.parts),
+      }));
+    }
     let currentAttemptModel: string = model;
 
     const configToUse: GenerateContentConfig = {

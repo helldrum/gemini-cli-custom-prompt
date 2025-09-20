@@ -1,0 +1,32 @@
+# MySQL
+
+SOMETHING_GOOD: [REDACTED]
+SOMETHING_GOOD=[REDACTED]
+this is my db string -> [REDACTED]
+
+# PostgreSQL
+[REDACTED]
+[REDACTED]
+
+# MongoDB
+[REDACTED]
+[REDACTED]
+
+# Redis
+[REDACTED]
+[REDACTED]
+
+# MS SQL Server
+[REDACTED]
+[REDACTED]
+
+# SQLite 
+[REDACTED]
+
+# Oracle
+[REDACTED]
+[REDACTED]
+
+# Cassandra
+[REDACTED]
+[REDACTED]
