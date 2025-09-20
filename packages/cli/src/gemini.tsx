@@ -153,8 +153,6 @@ async function relaunchAppInChildProcess(additionalArgs: string[]) {
   await relaunchOnExitCode(runner);
 }
 
-import { runZedIntegration } from './zed-integration/zedIntegration.js';
-
 export function setupUnhandledRejectionHandler() {
   let unhandledRejectionOccurred = false;
   process.on('unhandledRejection', (reason, _promise) => {

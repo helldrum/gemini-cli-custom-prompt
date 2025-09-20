@@ -36,6 +36,22 @@ removing the extra left padding on content and ensuring full-width display.
 
 ![Extended Frontend Screenshot](./docs/assets/Capture_frontend.png)
 
+### PII Redaction (Sensitive Data Censorship)
+
+This fork includes a robust PII (Personally Identifiable Information) redaction system designed to automatically filter sensitive data from your prompts before they are sent to external services like Google servers.
+
+It intelligently redacts:
+
+- Private Keys (RSA, OpenSSH)
+- SSL Certificates
+- Email Addresses
+- Various Database Connection Strings (MySQL, PostgreSQL, MongoDB, Redis, MS SQL, Oracle, Cassandra, Elasticsearch, SQLite)
+- GCP Service Account JSON blobs
+
+You can toggle this feature on or off using the `/anonymize on` and `/anonymize off` commands within the CLI.
+
+The redaction rules are highly configurable and defined in `packages/core/src/pii/gitleaksFilters.ts`. A dedicated test suite (`test-pii-filters.js` in the project root) is available to validate and refine these rules.
+
 ## How to Customize Prompts & Behavior
 
 This fork is designed to be easily customizable. All prompt and behavior modifications are handled by a custom build process that injects your changes without altering the original source code.
@@ -55,19 +71,9 @@ All custom prompts are managed as plain text files in the `hacked_prompts_source
 
 Simply edit these `.txt` files to change the agent's behavior.
 
-### 2. Build the Prompt Module
+### 2. Rebuild the Application
 
-After editing the `.txt` files, you need to convert them into a JavaScript module that the build process can use. Run the following command:
-
-```bash
-node build_hacked_prompts.js
-```
-
-This will read all files in `hacked_prompts_source/` and generate an updated `hacked_prompts.js` file.
-
-### 3. Compile the Final CLI
-
-The final step is to bundle the application. The build process will automatically use a custom plugin (`esbuild.prompt-patcher.js`) to inject your prompts from `hacked_prompts.js` and apply other patches. This patch also disables the security feature that blocks shell command substitution (`$()`, `<()`, etc.), giving the agent more power.
+After editing the `.txt` files in `hacked_prompts_source/`, you just need to rebuild the application. The build process will automatically copy your modified prompts into the final bundle, where they will be read at runtime.
 
 ```bash
 npm run bundle

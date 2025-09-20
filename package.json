@@ -94,7 +94,8 @@
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.30.1",
     "vitest": "^3.2.4",
-    "yargs": "^17.7.2"
+    "yargs": "^17.7.2",
+    "read-package-up": "^11.0.0"
   },
   "dependencies": {
     "@lvce-editor/ripgrep": "^1.6.0",
