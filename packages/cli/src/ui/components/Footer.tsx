@@ -75,7 +75,6 @@ export const Footer: React.FC<FooterProps> = ({
     : shortenPath(tildeifyPath(targetDir), pathLength);
 
   const justifyContent = hideCWD && hideModelInfo ? 'center' : 'space-between';
-  const displayVimMode = vimEnabled ? vimMode : undefined;
 
   const showDebugProfiler = debugMode || isDevelopment;
 
@@ -101,98 +100,6 @@ export const Footer: React.FC<FooterProps> = ({
                 </Gradient>
               ) : (
                 <Text color={theme.text.link}>
-                  {displayPath}
-                  {branchName && (
-                    <Text color={theme.text.secondary}> ({branchName}*)</Text>
-                  )}
-                </Text>
-              ))}
-            {debugMode && (
-              <Text color={theme.status.error}>
-                {' ' + (debugMessage || '--debug')}
-              </Text>
-            )}
-          </Box>
-        )}
-
-        {/* Middle Section: Centered Trust/Sandbox Info */}
-        {!hideSandboxStatus && (
-          <Box
-            flexGrow={isNarrow || hideCWD || hideModelInfo ? 0 : 1}
-            alignItems="center"
-            justifyContent={isNarrow || hideCWD ? 'flex-start' : 'center'}
-            display="flex"
-            paddingX={isNarrow ? 0 : 1}
-            paddingTop={isNarrow ? 1 : 0}
-          >
-            {isTrustedFolder === false ? (
-              <Text color={theme.status.warning}>untrusted</Text>
-            ) : process.env['SANDBOX'] &&
-              process.env['SANDBOX'] !== 'sandbox-exec' ? (
-              <Text color="green">
-                {process.env['SANDBOX'].replace(/^gemini-(?:cli-)?/, '')}
-              </Text>
-            ) : process.env['SANDBOX'] === 'sandbox-exec' ? (
-              <Text color={theme.status.warning}>
-                macOS Seatbelt{' '}
-                <Text color={theme.text.secondary}>
-                  ({process.env['SEATBELT_PROFILE']})
-                </Text>
-              </Text>
-            ) : (
-              <Text color={theme.status.error}>
-                no sandbox <Text color={theme.text.secondary}>(see /docs)</Text>
-              </Text>
-            )}
-          </Box>
-        )}
-
-        {/* Right Section: Gemini Label and Console Summary */}
-        {(!hideModelInfo ||
-          showMemoryUsage ||
-          corgiMode ||
-          (!showErrorDetails && errorCount > 0)) && (
-          <Box alignItems="center" paddingTop={isNarrow ? 1 : 0}>
-            {!hideModelInfo && (
-              <Box alignItems="center">
-                <Text color={theme.text.accent}>
-                  {isNarrow ? '' : ' '}
-                  {model}{' '}
-                  <ContextUsageDisplay
-                    promptTokenCount={promptTokenCount}
-                    model={model}
-                  />
-                </Text>
-                {showMemoryUsage && <MemoryUsageDisplay />}
-              </Box>
-            )}
-            <Box alignItems="center" paddingLeft={2}>
-              {corgiMode && (
-                <Text>
-                  {!hideModelInfo && <Text color={theme.ui.comment}>| </Text>}
-                  <Text color={theme.status.error}>▼</Text>
-                  <Text color={theme.text.primary}>(´</Text>
-                  <Text color={theme.status.error}>ᴥ</Text>
-                  <Text color={theme.text.primary}>`)</Text>
-                  <Text color={theme.status.error}>▼ </Text>
-                </Text>
-              )}
-              {!showErrorDetails && errorCount > 0 && (
-                <Box>
-                  {!hideModelInfo && <Text color={theme.ui.comment}>| </Text>}
-                  <ConsoleSummaryDisplay errorCount={errorCount} />
-                </Box>
-              )}
-            </Box>
-          </Box>
-        )}
-      </Box>
-      <Box width="100%" justifyContent="flex-start">
-        <Text color={theme.text.secondary}>
-          Cost: {calculatedCostEstimation.toFixed(6)} $
-        </Text>
-        <Text color={theme.text.secondary}> | Tokens: {consumedTokens}</Text>
-      </Box>
                   {displayPath}
                   {branchName && (
                     <Text color={theme.text.secondary}> ({branchName}*)</Text>
