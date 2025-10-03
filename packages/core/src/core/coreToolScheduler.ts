@@ -596,6 +596,45 @@ export class CoreToolScheduler {
             );
           }
           // Certains outils peuvent avoir d'autres paramètres de chemin, à ajouter si nécessaire
+          // J'ajoute ici la résolution pour les paramètres 'paths', 'exclude', 'include' de read_many_files
+          if (tool.name === 'read_many_files') {
+            if (Array.isArray(resolvedArgs['paths'])) {
+              resolvedArgs['paths'] = (resolvedArgs['paths'] as string[]).map(
+                (p) => path.resolve(this.config.getTargetDir(), p),
+              );
+            }
+            if (Array.isArray(resolvedArgs['exclude'])) {
+              resolvedArgs['exclude'] = (
+                resolvedArgs['exclude'] as string[]
+              ).map((p) => path.resolve(this.config.getTargetDir(), p));
+            }
+            if (Array.isArray(resolvedArgs['include'])) {
+              resolvedArgs['include'] = (
+                resolvedArgs['include'] as string[]
+              ).map((p) => path.resolve(this.config.getTargetDir(), p));
+            }
+          }
+          break;
+        case 'search_file_content':
+        case 'glob':
+          if (typeof resolvedArgs['path'] === 'string') {
+            resolvedArgs['path'] = path.resolve(
+              this.config.getTargetDir(),
+              resolvedArgs['path'] as string,
+            );
+          }
+          if (typeof resolvedArgs['include'] === 'string') {
+            resolvedArgs['include'] = path.resolve(
+              this.config.getTargetDir(),
+              resolvedArgs['include'] as string,
+            );
+          }
+          if (typeof resolvedArgs['pattern'] === 'string') {
+            resolvedArgs['pattern'] = path.resolve(
+              this.config.getTargetDir(),
+              resolvedArgs['pattern'] as string,
+            );
+          }
           break;
         // Ajouter d'autres cas pour d'autres outils si nécessaire
         default:
