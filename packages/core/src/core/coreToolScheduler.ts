@@ -572,7 +572,42 @@ export class CoreToolScheduler {
     args: object,
   ): AnyToolInvocation | Error {
     try {
-      return tool.build(args);
+      const resolvedArgs = { ...args } as Record<string, unknown>; // Créer une copie des args
+
+      // Résoudre les chemins pour les outils qui en ont besoin
+      switch (tool.name) {
+        case ReadFileTool.Name:
+        case ShellTool.Name:
+          if (typeof resolvedArgs['path'] === 'string') {
+            resolvedArgs['path'] = path.resolve(
+              this.config.getTargetDir(),
+              resolvedArgs['path'] as string,
+            );
+          }
+          break;
+        case 'replace':
+        case 'write_file':
+        case 'list_directory':
+        case 'read_many_files':
+          if (typeof resolvedArgs['file_path'] === 'string') {
+            resolvedArgs['file_path'] = path.resolve(
+              this.config.getTargetDir(),
+              resolvedArgs['file_path'] as string,
+            );
+          }
+          // Certains outils peuvent avoir d'autres paramètres de chemin, à ajouter si nécessaire
+          break;
+        // Ajouter d'autres cas pour d'autres outils si nécessaire
+        default:
+          // No specific path resolution needed for other tools
+          break;
+      }
+
+      // Pour les outils qui ont un paramètre 'include' ou 'exclude' qui peut contenir des chemins
+      // if (typeof resolvedArgs['include'] === 'string') {
+      //   resolvedArgs['include'] = this.config.resolvePath(resolvedArgs['include'] as string);
+      // }
+      return tool.build(resolvedArgs); // Utiliser les args résolus
     } catch (e) {
       if (e instanceof Error) {
         return e;
