@@ -68,7 +68,7 @@ export const Composer = () => {
     hideCWD: settings.merged.ui?.footer?.hideCWD || false,
     hideSandboxStatus: settings.merged.ui?.footer?.hideSandboxStatus || false,
     hideModelInfo: settings.merged.ui?.footer?.hideModelInfo || false,
-    consumedTokens: consumedTokens,
+    consumedTokens,
   };
 
   return (
@@ -182,7 +182,9 @@ export const Composer = () => {
         />
       )}
 
-      {!settings.merged.ui?.hideFooter && !isScreenReaderEnabled && <Footer />}
+      {!settings.merged.ui?.hideFooter && !isScreenReaderEnabled && (
+        <Footer {...footerProps} />
+      )}
     </Box>
   );
 };
