@@ -15,81 +15,85 @@ import { MemoryUsageDisplay } from './MemoryUsageDisplay.js';
 import { ContextUsageDisplay } from './ContextUsageDisplay.js';
 import { DebugProfiler } from './DebugProfiler.js';
 import { isDevelopment } from '../../utils/installationInfo.js';
+import { useUIState } from '../contexts/UIStateContext.js';
+import { useConfig } from '../contexts/ConfigContext.js';
+import { useSettings } from '../contexts/SettingsContext.js';
+import { useVimMode } from '../contexts/VimModeContext.js';
+import { useSessionStats } from '../contexts/SessionContext.js'; // Import useSessionStats
+import { uiTelemetryService } from '@google/gemini-cli-core'; // Import uiTelemetryService
+import { useTerminalSize } from '../hooks/useTerminalSize.js'; // Import useTerminalSize
+import { isNarrowWidth } from '../utils/isNarrowWidth.js'; // Import isNarrowWidth
 
-const MODEL_PRICING_PER_MILLION_TOKENS: Record<string, number> = {
-  'gemini-2.5-pro': 1.25, // $1.25 per million input tokens
-  'gemini-2.0-flash': 0.3, // $0.30 per million input tokens
-};
+export const Footer: React.FC = () => {
+  const uiState = useUIState();
+  const config = useConfig();
+  const settings = useSettings();
+  const { vimEnabled, vimMode } = useVimMode();
+  const { stats } = useSessionStats(); // Use useSessionStats to get stats
+  const { columns: terminalWidth } = useTerminalSize(); // Use useTerminalSize to get terminalWidth
 
-export interface FooterProps {
-  model: string;
-  targetDir: string;
-  branchName?: string;
-  debugMode: boolean;
-  debugMessage: string;
-  corgiMode: boolean;
-  errorCount: number;
-  showErrorDetails: boolean;
-  showMemoryUsage?: boolean;
-  promptTokenCount: number;
-  nightly: boolean;
-  vimMode?: string;
-  isTrustedFolder?: boolean;
-  hideCWD?: boolean;
-  hideSandboxStatus?: boolean;
-  hideModelInfo?: boolean;
-  consumedTokens?: number;
-}
+  const { 
+    model,
+    targetDir,
+    debugMode,
+    branchName,
+    debugMessage,
+    corgiMode,
+    errorCount,
+    showErrorDetails,
+    promptTokenCount,
+    nightly,
+    isTrustedFolder,
+    mainAreaWidth,
+  } = {
+    model: config.getModel(),
+    targetDir: config.getTargetDir(),
+    debugMode: config.getDebugMode(),
+    branchName: uiState.branchName,
+    debugMessage: uiState.debugMessage,
+    corgiMode: uiState.corgiMode,
+    errorCount: uiState.errorCount,
+    showErrorDetails: uiState.showErrorDetails,
+    promptTokenCount: uiState.sessionStats.lastPromptTokenCount,
+    nightly: uiState.nightly,
+    isTrustedFolder: uiState.isTrustedFolder,
+    mainAreaWidth: uiState.mainAreaWidth,
+  };
 
-export const Footer: React.FC<FooterProps> = ({
-  model,
-  targetDir,
-  branchName,
-  debugMode,
-  debugMessage,
-  corgiMode,
-  errorCount,
-  showErrorDetails,
-  showMemoryUsage,
-  promptTokenCount,
-  nightly,
-  vimMode,
-  isTrustedFolder,
-  hideCWD = false,
-  hideSandboxStatus = false,
-  hideModelInfo = false,
-  consumedTokens = 0,
-}) => {
-  const { columns: terminalWidth } = useTerminalSize();
+  const showMemoryUsage =
+    config.getDebugMode() || settings.merged.ui?.showMemoryUsage || false;
+  const hideCWD = settings.merged.ui?.footer?.hideCWD || false;
+  const hideSandboxStatus =
+    settings.merged.ui?.footer?.hideSandboxStatus || false;
+  const hideModelInfo = settings.merged.ui?.footer?.hideModelInfo || false;
 
   const isNarrow = isNarrowWidth(terminalWidth);
 
-  const costPerMillionTokens = MODEL_PRICING_PER_MILLION_TOKENS[model] || 0;
-  const calculatedCostEstimation =
-    (consumedTokens / 1_000_000) * costPerMillionTokens;
-
-  // Adjust path length based on terminal width
-  const pathLength = Math.max(20, Math.floor(terminalWidth * 0.4));
-  const displayPath = isNarrow
-    ? path.basename(tildeifyPath(targetDir))
-    : shortenPath(tildeifyPath(targetDir), pathLength);
+  const pathLength = Math.max(20, Math.floor(mainAreaWidth * 0.25));
+  const displayPath = shortenPath(tildeifyPath(targetDir), pathLength);
 
   const justifyContent = hideCWD && hideModelInfo ? 'center' : 'space-between';
+  const displayVimMode = vimEnabled ? vimMode : undefined;
 
   const showDebugProfiler = debugMode || isDevelopment;
 
-  return (
-    <Box flexDirection="column" width="100%">
+    const totalTokens = stats.totalTokens; // Get totalTokens from stats
+    const costEstimation = stats.costEstimation; // Get costEstimation from stats
+  
+    return (
       <Box
         justifyContent={justifyContent}
-        width="100%"
-        flexDirection={isNarrow ? 'column' : 'row'}
-        alignItems={isNarrow ? 'flex-start' : 'center'}
+        width={mainAreaWidth}
+        flexDirection="row"
+        alignItems="center"
+        paddingX={1}
       >
-        {(debugMode || vimMode || !hideCWD) && (
+        {(showDebugProfiler || displayVimMode || !hideCWD) && (
           <Box>
-            {debugMode && <DebugProfiler />}
-            {vimMode && <Text color={theme.text.secondary}>[{vimMode}] </Text>}
+            {showDebugProfiler && <DebugProfiler />}
+            {displayVimMode && (
+              <Text color={theme.text.secondary}>[{displayVimMode}] </Text>
+            )}
             {!hideCWD &&
               (nightly ? (
                 <Gradient colors={theme.ui.gradient}>
@@ -113,7 +117,7 @@ export const Footer: React.FC<FooterProps> = ({
             )}
           </Box>
         )}
-
+  
         {/* Middle Section: Centered Trust/Sandbox Info */}
         {!hideSandboxStatus && (
           <Box
@@ -145,7 +149,7 @@ export const Footer: React.FC<FooterProps> = ({
             )}
           </Box>
         )}
-
+  
         {/* Right Section: Gemini Label and Console Summary */}
         {(!hideModelInfo ||
           showMemoryUsage ||
@@ -185,13 +189,17 @@ export const Footer: React.FC<FooterProps> = ({
             </Box>
           </Box>
         )}
+        {/* New Box for Cost and Tokens */}
+        <Box
+          width="100%"
+          justifyContent="flex-end" // Align to the right
+          paddingX={1}
+        >
+          <Text color={theme.text.secondary}>
+            Cost: {costEstimation.toFixed(6)} $
+          </Text>
+          <Text color={theme.text.secondary}> | Tokens: {totalTokens}</Text>
+        </Box>
       </Box>
-      <Box width="100%" justifyContent="flex-start">
-        <Text color={theme.text.secondary}>
-          Cost: {calculatedCostEstimation.toFixed(6)} $
-        </Text>
-        <Text color={theme.text.secondary}> | Tokens: {consumedTokens}</Text>
-      </Box>
-    </Box>
-  );
-};
+    );
+  };

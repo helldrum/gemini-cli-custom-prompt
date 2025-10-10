@@ -52,7 +52,6 @@ import type { IdeContext, File } from '../ide/types.js';
 import { handleFallback } from '../fallback/handler.js';
 import type { RoutingContext } from '../routing/routingStrategy.js';
 import { uiTelemetryService } from '../telemetry/uiTelemetry.js';
-import { customRules } from '../pii/gitleaksFilters.js';
 
 export function isThinkingSupported(model: string) {
   return model.startsWith('gemini-2.5') || model === DEFAULT_GEMINI_MODEL_AUTO;
@@ -261,7 +260,7 @@ My setup is complete. I will provide my first command in the next turn.
 
     try {
       const userMemory = this.config.getUserMemory();
-      const systemInstruction = getCoreSystemPrompt(userMemory);
+      const systemInstruction = getCoreSystemPrompt(this.config, userMemory);
       const model = this.config.getModel();
 
       const config: GenerateContentConfig = { ...this.generateContentConfig };
@@ -398,13 +397,13 @@ My setup is complete. I will provide my first command in the next turn.
             path: currentActiveFile.path,
             cursor: currentActiveFile.cursor
               ? {
-                  line: currentActiveFile.cursor.line,
-                  character: currentActiveFile.cursor.character,
-                }
-              : undefined,
-            selectedText: currentActiveFile.selectedText || undefined,
-          };
-        } else {
+                line: currentActiveFile.cursor.line,
+                character: currentActiveFile.cursor.character,
+              }
+            : undefined,
+          selectedText: currentActiveFile.selectedText || undefined,
+        };
+      } else {
           const lastCursor = lastActiveFile.cursor;
           const currentCursor = currentActiveFile.cursor;
           if (
@@ -467,42 +466,11 @@ My setup is complete. I will provide my first command in the next turn.
     }
 
     const configModel = this.config.getModel();
-    const model: string =
+    const model: string = 
       configModel === DEFAULT_GEMINI_MODEL_AUTO
         ? DEFAULT_GEMINI_MODEL
         : configModel;
     return getEffectiveModel(this.config.isInFallbackMode(), model);
-  private anonymizeRequest(request: PartListUnion): PartListUnion {
-    if (!Array.isArray(request)) {
-      // PartListUnion can be a string in some contexts, though less common.
-      if (typeof request === 'string') {
-        let redactedText = request;
-        for (const rule of customRules) {
-          redactedText = redactedText.replace(rule.pattern(), '[redacted]');
-        }
-        return redactedText;
-      }
-      return request;
-    }
-
-    // The type `Part` can be a string or an object with a `text` property.
-    return request.map((part) => {
-      if (typeof part === 'string') {
-        let redactedText = part;
-        for (const rule of customRules) {
-          redactedText = redactedText.replace(rule.pattern(), '[redacted]');
-        }
-        return redactedText;
-      }
-      if (part.text) {
-        let redactedText = part.text;
-        for (const rule of customRules) {
-          redactedText = redactedText.replace(rule.pattern(), '[redacted]');
-        }
-        return { ...part, text: redactedText };
-      }
-      return part;
-    });
   }
 
   async *sendMessageStream(
@@ -512,9 +480,6 @@ My setup is complete. I will provide my first command in the next turn.
     turns: number = MAX_TURNS,
     isInvalidStreamRetry: boolean = false,
   ): AsyncGenerator<ServerGeminiStreamEvent, Turn> {
-    if (this.config.isAnonymizationEnabled()) {
-      request = this.anonymizeRequest(request);
-    }
     if (this.lastPromptId !== prompt_id) {
       this.loopDetector.reset(prompt_id);
       this.lastPromptId = prompt_id;
@@ -541,12 +506,12 @@ My setup is complete. I will provide my first command in the next turn.
       JSON.stringify(request).length / 4,
     );
 
-    const remainingTokenCount =
+    const remainingTokenCount = 
       tokenLimit(modelForLimitCheck) -
       uiTelemetryService.getLastPromptTokenCount();
 
     if (estimatedRequestTokenCount > remainingTokenCount * 0.95) {
-      yield {
+      yield { 
         type: GeminiEventType.ContextWindowWillOverflow,
         value: { estimatedRequestTokenCount, remainingTokenCount },
       };
@@ -565,9 +530,9 @@ My setup is complete. I will provide my first command in the next turn.
     // in the conversation history . The IDE context is not discarded; it will
     // be included in the next regular message sent to the model.
     const history = this.getHistory();
-    const lastMessage =
+    const lastMessage = 
       history.length > 0 ? history[history.length - 1] : undefined;
-    const hasPendingToolCall =
+    const hasPendingToolCall = 
       !!lastMessage &&
       lastMessage.role === 'model' &&
       (lastMessage.parts?.some((p) => 'functionCall' in p) || false);
@@ -699,12 +664,6 @@ My setup is complete. I will provide my first command in the next turn.
     abortSignal: AbortSignal,
     model: string,
   ): Promise<GenerateContentResponse> {
-    if (this.config.isAnonymizationEnabled()) {
-      contents = contents.map((content) => ({
-        ...content,
-        parts: this.anonymizeRequest(content.parts),
-      }));
-    }
     let currentAttemptModel: string = model;
 
     const configToUse: GenerateContentConfig = {
@@ -714,7 +673,7 @@ My setup is complete. I will provide my first command in the next turn.
 
     try {
       const userMemory = this.config.getUserMemory();
-      const systemInstruction = getCoreSystemPrompt(userMemory);
+      const systemInstruction = getCoreSystemPrompt(this.config, userMemory);
 
       const requestConfig: GenerateContentConfig = {
         abortSignal,

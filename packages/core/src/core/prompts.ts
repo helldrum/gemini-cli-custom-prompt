@@ -187,7 +187,7 @@ export function getCoreSystemPrompt(userMemory?: string): string {
   }
 
   const memorySuffix =
-    userMemory && userMemory.trim().length > 0
+    (typeof userMemory === 'string' && userMemory.trim().length > 0)
       ? `\n\n---\n\n${userMemory.trim()}`
       : '';
 

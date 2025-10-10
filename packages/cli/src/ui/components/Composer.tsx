@@ -150,9 +150,7 @@ export const Composer = () => {
         />
       )}
 
-      {!settings.merged.ui?.hideFooter && !isScreenReaderEnabled && (
-        <Footer {...footerProps} />
-      )}
+      {!settings.merged.ui?.hideFooter && !isScreenReaderEnabled && <Footer />}
     </Box>
   );
 };
