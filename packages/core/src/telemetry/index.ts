@@ -44,6 +44,7 @@ export {
   logExtensionEnable,
   logExtensionInstallEvent,
   logExtensionUninstall,
+  logExtensionUpdateEvent,
   logWebFetchFallbackAttempt,
 } from './loggers.js';
 export type { SlashCommandEvent, ChatCompressionEvent } from './types.js';
@@ -61,6 +62,7 @@ export {
   KittySequenceOverflowEvent,
   ToolOutputTruncatedEvent,
   WebFetchFallbackAttemptEvent,
+  ToolCallDecision,
 } from './types.js';
 export { makeSlashCommandEvent, makeChatCompressionEvent } from './types.js';
 export type { TelemetryEvent } from './types.js';
@@ -85,6 +87,13 @@ export {
   recordUserActivity,
   isUserActive,
 } from './activity-detector.js';
+export {
+  ActivityMonitor,
+  initializeActivityMonitor,
+  getActivityMonitor,
+  startGlobalActivityMonitoring,
+  stopGlobalActivityMonitoring,
+} from './activity-monitor.js';
 export {
   // Core metrics functions
   recordToolCallMetrics,
@@ -115,6 +124,7 @@ export {
   recordPerformanceRegression,
   recordBaselineComparison,
   isPerformanceMonitoringActive,
+  recordFlickerFrame,
   // Performance monitoring types
   PerformanceMetricType,
   MemoryMetricType,

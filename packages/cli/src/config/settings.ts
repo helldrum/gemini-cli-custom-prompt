@@ -11,7 +11,7 @@ import * as dotenv from 'dotenv';
 import process from 'node:process';
 import {
   FatalConfigError,
-  GEMINI_CONFIG_DIR as GEMINI_DIR,
+  GEMINI_DIR,
   getErrorMessage,
   Storage,
 } from '@google/gemini-cli-core';
@@ -31,6 +31,7 @@ import { resolveEnvVarsInObject } from '../utils/envVarResolver.js';
 import { customDeepMerge, type MergeableObject } from '../utils/deepMerge.js';
 import { updateSettingsFilePreservingFormat } from '../utils/commentJson.js';
 import { disableExtension } from './extension.js';
+import { ExtensionEnablementManager } from './extensions/extensionEnablement.js';
 
 function getMergeStrategyForPath(path: string[]): MergeStrategy | undefined {
   let current: SettingDefinition | undefined = undefined;
@@ -48,8 +49,6 @@ function getMergeStrategyForPath(path: string[]): MergeStrategy | undefined {
 }
 
 export type { Settings, MemoryImportFormat };
-
-export const SETTINGS_DIRECTORY_NAME = '.gemini';
 
 export const USER_SETTINGS_PATH = Storage.getGlobalSettingsPath();
 export const USER_SETTINGS_DIR = path.dirname(USER_SETTINGS_PATH);
@@ -108,6 +107,7 @@ const MIGRATION_MAP: Record<string, string> = {
   memoryDiscoveryMaxDirs: 'context.discoveryMaxDirs',
   model: 'model.name',
   preferredEditor: 'general.preferredEditor',
+  retryFetchErrors: 'general.retryFetchErrors',
   sandbox: 'tools.sandbox',
   selectedAuthType: 'security.auth.selectedType',
   enableInteractiveShell: 'tools.shell.enableInteractiveShell',
@@ -756,8 +756,14 @@ export function migrateDeprecatedSettings(
       console.log(
         `Migrating deprecated extensions.disabled settings from ${scope} settings...`,
       );
+      const extensionEnablementManager = new ExtensionEnablementManager();
       for (const extension of settings.extensions.disabled ?? []) {
-        disableExtension(extension, scope, workspaceDir);
+        disableExtension(
+          extension,
+          scope,
+          extensionEnablementManager,
+          workspaceDir,
+        );
       }
 
       const newExtensionsValue = { ...settings.extensions };

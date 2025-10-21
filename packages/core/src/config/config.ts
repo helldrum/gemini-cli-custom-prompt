@@ -46,6 +46,9 @@ import { StartSessionEvent } from '../telemetry/index.js';
 import {
   DEFAULT_GEMINI_EMBEDDING_MODEL,
   DEFAULT_GEMINI_FLASH_MODEL,
+  DEFAULT_GEMINI_MODEL,
+  DEFAULT_GEMINI_MODEL_AUTO,
+  DEFAULT_THINKING_MODE,
 } from './models.js';
 import { shouldAttemptBrowserLaunch } from '../utils/browser.js';
 import type { MCPOAuthConfig } from '../mcp/oauth-provider.js';
@@ -116,6 +119,14 @@ export interface OutputSettings {
   format?: OutputFormat;
 }
 
+export interface CodebaseInvestigatorSettings {
+  enabled?: boolean;
+  maxNumTurns?: number;
+  maxTimeMinutes?: number;
+  thinkingBudget?: number;
+  model?: string;
+}
+
 /**
  * All information required in CLI to handle an extension. Defined in Core so
  * that the collection of loaded, active, and inactive extensions can be passed
@@ -131,6 +142,7 @@ export interface GeminiCLIExtension {
   mcpServers?: Record<string, MCPServerConfig>;
   contextFiles: string[];
   excludeTools?: string[];
+  id?: string;
 }
 
 export interface ExtensionInstallMetadata {
@@ -144,14 +156,14 @@ export interface ExtensionInstallMetadata {
 
 import type { FileFilteringOptions } from './constants.js';
 import {
-  DEFAULT_MEMORY_FILE_FILTERING_OPTIONS,
   DEFAULT_FILE_FILTERING_OPTIONS,
+  DEFAULT_MEMORY_FILE_FILTERING_OPTIONS,
 } from './constants.js';
 
 export type { FileFilteringOptions };
 export {
-  DEFAULT_MEMORY_FILE_FILTERING_OPTIONS,
   DEFAULT_FILE_FILTERING_OPTIONS,
+  DEFAULT_MEMORY_FILE_FILTERING_OPTIONS,
 };
 
 export const DEFAULT_TRUNCATE_TOOL_OUTPUT_THRESHOLD = 4_000_000;
@@ -178,7 +190,7 @@ export class MCPServerConfig {
     readonly description?: string,
     readonly includeTools?: string[],
     readonly excludeTools?: string[],
-    readonly extensionName?: string,
+    readonly extension?: GeminiCLIExtension,
     // OAuth configuration
     readonly oauth?: MCPOAuthConfig,
     readonly authProviderType?: AuthProviderType,
@@ -208,7 +220,7 @@ export interface ConfigParameters {
   targetDir: string;
   debugMode: boolean;
   question?: string;
-  fullContext?: boolean;
+
   coreTools?: string[];
   allowedTools?: string[];
   excludeTools?: string[];
@@ -238,15 +250,14 @@ export interface ConfigParameters {
   includeDirectories?: string[];
   bugCommand?: BugCommandSettings;
   model: string;
-  extensionContextFilePaths?: string[];
   maxSessionTurns?: number;
   experimentalZedIntegration?: boolean;
   listExtensions?: boolean;
   extensions?: GeminiCLIExtension[];
+  enabledExtensions?: string[];
   blockedMcpServers?: Array<{ name: string; extensionName: string }>;
   noBrowser?: boolean;
   summarizeToolOutput?: Record<string, SummarizeToolOutputSettings>;
-  folderTrustFeature?: boolean;
   folderTrust?: boolean;
   ideMode?: boolean;
   loadMemoryFromIncludeDirectories?: boolean;
@@ -268,9 +279,13 @@ export interface ConfigParameters {
   policyEngineConfig?: PolicyEngineConfig;
   output?: OutputSettings;
   useModelRouter?: boolean;
+  disableModelRouterForAuth?: AuthType[];
   enableMessageBusIntegration?: boolean;
-  enableSubagents?: boolean;
+  codebaseInvestigatorSettings?: CodebaseInvestigatorSettings;
   continueOnFailedApiCall?: boolean;
+  retryFetchErrors?: boolean;
+  enableShellOutputEfficiency?: boolean;
+  ptyInfo?: string;
 }
 
 export class Config {
@@ -287,7 +302,7 @@ export class Config {
   private workspaceContext: WorkspaceContext;
   private readonly debugMode: boolean;
   private readonly question: string | undefined;
-  private readonly fullContext: boolean;
+
   private readonly coreTools: string[] | undefined;
   private readonly allowedTools: string[] | undefined;
   private readonly excludeTools: string[] | undefined;
@@ -319,9 +334,7 @@ export class Config {
   private readonly cwd: string;
   private readonly bugCommand: BugCommandSettings | undefined;
   private model: string;
-  private readonly extensionContextFilePaths: string[];
   private readonly noBrowser: boolean;
-  private readonly folderTrustFeature: boolean;
   private readonly folderTrust: boolean;
   private ideMode: boolean;
 
@@ -329,6 +342,7 @@ export class Config {
   private readonly maxSessionTurns: number;
   private readonly listExtensions: boolean;
   private readonly _extensions: GeminiCLIExtension[];
+  private readonly _enabledExtensions: string[];
   private readonly _blockedMcpServers: Array<{
     name: string;
     extensionName: string;
@@ -342,6 +356,7 @@ export class Config {
   private readonly loadMemoryFromIncludeDirectories: boolean = false;
   private readonly chatCompression: ChatCompressionSettings | undefined;
   private readonly interactive: boolean;
+  private readonly ptyInfo: string;
   private readonly trustedFolder: boolean | undefined;
   private readonly useRipgrep: boolean;
   private readonly enableInteractiveShell: boolean;
@@ -361,10 +376,14 @@ export class Config {
   private readonly messageBus: MessageBus;
   private readonly policyEngine: PolicyEngine;
   private readonly outputSettings: OutputSettings;
-  private readonly useModelRouter: boolean;
+  private useModelRouter: boolean;
+  private readonly initialUseModelRouter: boolean;
+  private readonly disableModelRouterForAuth?: AuthType[];
   private readonly enableMessageBusIntegration: boolean;
-  private readonly enableSubagents: boolean;
+  private readonly codebaseInvestigatorSettings: CodebaseInvestigatorSettings;
   private readonly continueOnFailedApiCall: boolean;
+  private readonly retryFetchErrors: boolean;
+  private readonly enableShellOutputEfficiency: boolean;
 
   constructor(params: ConfigParameters) {
     this.sessionId = params.sessionId;
@@ -379,7 +398,7 @@ export class Config {
     );
     this.debugMode = params.debugMode;
     this.question = params.question;
-    this.fullContext = params.fullContext ?? false;
+
     this.coreTools = params.coreTools;
     this.allowedTools = params.allowedTools;
     this.excludeTools = params.excludeTools;
@@ -405,8 +424,12 @@ export class Config {
     this.usageStatisticsEnabled = params.usageStatisticsEnabled ?? true;
 
     this.fileFiltering = {
-      respectGitIgnore: params.fileFiltering?.respectGitIgnore ?? true,
-      respectGeminiIgnore: params.fileFiltering?.respectGeminiIgnore ?? true,
+      respectGitIgnore:
+        params.fileFiltering?.respectGitIgnore ??
+        DEFAULT_FILE_FILTERING_OPTIONS.respectGitIgnore,
+      respectGeminiIgnore:
+        params.fileFiltering?.respectGeminiIgnore ??
+        DEFAULT_FILE_FILTERING_OPTIONS.respectGeminiIgnore,
       enableRecursiveFileSearch:
         params.fileFiltering?.enableRecursiveFileSearch ?? true,
       disableFuzzySearch: params.fileFiltering?.disableFuzzySearch ?? false,
@@ -417,22 +440,22 @@ export class Config {
     this.fileDiscoveryService = params.fileDiscoveryService ?? null;
     this.bugCommand = params.bugCommand;
     this.model = params.model;
-    this.extensionContextFilePaths = params.extensionContextFilePaths ?? [];
     this.maxSessionTurns = params.maxSessionTurns ?? -1;
     this.experimentalZedIntegration =
       params.experimentalZedIntegration ?? false;
     this.listExtensions = params.listExtensions ?? false;
     this._extensions = params.extensions ?? [];
+    this._enabledExtensions = params.enabledExtensions ?? [];
     this._blockedMcpServers = params.blockedMcpServers ?? [];
     this.noBrowser = params.noBrowser ?? false;
     this.summarizeToolOutput = params.summarizeToolOutput;
-    this.folderTrustFeature = params.folderTrustFeature ?? false;
     this.folderTrust = params.folderTrust ?? false;
     this.ideMode = params.ideMode ?? false;
     this.loadMemoryFromIncludeDirectories =
       params.loadMemoryFromIncludeDirectories ?? false;
     this.chatCompression = params.chatCompression;
     this.interactive = params.interactive ?? false;
+    this.ptyInfo = params.ptyInfo ?? 'child_process';
     this.trustedFolder = params.trustedFolder;
     this.useRipgrep = params.useRipgrep ?? true;
     this.enableInteractiveShell = params.enableInteractiveShell ?? false;
@@ -451,11 +474,25 @@ export class Config {
     this.enableToolOutputTruncation = params.enableToolOutputTruncation ?? true;
     this.useSmartEdit = params.useSmartEdit ?? true;
     this.useWriteTodos = params.useWriteTodos ?? false;
-    this.useModelRouter = params.useModelRouter ?? false;
+    this.initialUseModelRouter = params.useModelRouter ?? false;
+    this.useModelRouter = this.initialUseModelRouter;
+    this.disableModelRouterForAuth = params.disableModelRouterForAuth ?? [
+      AuthType.LOGIN_WITH_GOOGLE,
+    ];
     this.enableMessageBusIntegration =
       params.enableMessageBusIntegration ?? false;
-    this.enableSubagents = params.enableSubagents ?? false;
+    this.codebaseInvestigatorSettings = {
+      enabled: params.codebaseInvestigatorSettings?.enabled ?? true,
+      maxNumTurns: params.codebaseInvestigatorSettings?.maxNumTurns ?? 15,
+      maxTimeMinutes: params.codebaseInvestigatorSettings?.maxTimeMinutes ?? 5,
+      thinkingBudget:
+        params.codebaseInvestigatorSettings?.thinkingBudget ??
+        DEFAULT_THINKING_MODE,
+      model: params.codebaseInvestigatorSettings?.model ?? DEFAULT_GEMINI_MODEL,
+    };
     this.continueOnFailedApiCall = params.continueOnFailedApiCall ?? true;
+    this.enableShellOutputEfficiency =
+      params.enableShellOutputEfficiency ?? true;
     this.extensionManagement = params.extensionManagement ?? true;
     this.storage = new Storage(this.targetDir);
     this.enablePromptCompletion = params.enablePromptCompletion ?? false;
@@ -466,6 +503,7 @@ export class Config {
     this.outputSettings = {
       format: params.output?.format ?? OutputFormat.TEXT,
     };
+    this.retryFetchErrors = params.retryFetchErrors ?? false;
 
     if (params.contextFileName) {
       setGeminiMdFilename(params.contextFileName);
@@ -511,8 +549,18 @@ export class Config {
   }
 
   async refreshAuth(authMethod: AuthType) {
+    this.useModelRouter = this.initialUseModelRouter;
+    if (this.disableModelRouterForAuth?.includes(authMethod)) {
+      this.useModelRouter = false;
+      if (this.model === DEFAULT_GEMINI_MODEL_AUTO) {
+        this.model = DEFAULT_GEMINI_MODEL;
+      }
+    } else {
+      this.model = DEFAULT_GEMINI_MODEL_AUTO;
+    }
+
     // Vertex and Genai have incompatible encryption and sending history with
-    // throughtSignature from Genai to Vertex will fail, we need to strip them
+    // thoughtSignature from Genai to Vertex will fail, we need to strip them
     if (
       this.contentGeneratorConfig?.authType === AuthType.USE_GEMINI &&
       authMethod === AuthType.LOGIN_WITH_GOOGLE
@@ -664,10 +712,6 @@ export class Config {
   }
   getQuestion(): string | undefined {
     return this.question;
-  }
-
-  getFullContext(): boolean {
-    return this.fullContext;
   }
 
   getCoreTools(): string[] | undefined {
@@ -843,10 +887,6 @@ export class Config {
     return this.usageStatisticsEnabled;
   }
 
-  getExtensionContextFilePaths(): string[] {
-    return this.extensionContextFilePaths;
-  }
-
   getExperimentalZedIntegration(): boolean {
     return this.experimentalZedIntegration;
   }
@@ -861,6 +901,12 @@ export class Config {
 
   getExtensions(): GeminiCLIExtension[] {
     return this._extensions;
+  }
+
+  // The list of explicitly enabled extensions, if any were given, may contain
+  // the string "none".
+  getEnabledExtensions(): string[] {
+    return this._enabledExtensions;
   }
 
   getBlockedMcpServers(): Array<{ name: string; extensionName: string }> {
@@ -885,18 +931,17 @@ export class Config {
     return this.ideMode;
   }
 
-  getFolderTrustFeature(): boolean {
-    return this.folderTrustFeature;
+  /**
+   * Returns 'true' if the folder trust feature is enabled.
+   */
+  getFolderTrust(): boolean {
+    return this.folderTrust;
   }
 
   /**
    * Returns 'true' if the workspace is considered "trusted".
    * 'false' for untrusted.
    */
-  getFolderTrust(): boolean {
-    return this.folderTrust;
-  }
-
   isTrustedFolder(): boolean {
     // isWorkspaceTrusted in cli/src/config/trustedFolder.js returns undefined
     // when the file based trust value is unavailable, since it is mainly used
@@ -938,6 +983,14 @@ export class Config {
     return this.chatCompression;
   }
 
+  isInteractiveShellEnabled(): boolean {
+    return (
+      this.interactive &&
+      this.ptyInfo !== 'child_process' &&
+      this.enableInteractiveShell
+    );
+  }
+
   isInteractive(): boolean {
     return this.interactive;
   }
@@ -956,6 +1009,14 @@ export class Config {
 
   getContinueOnFailedApiCall(): boolean {
     return this.continueOnFailedApiCall;
+  }
+
+  getRetryFetchErrors(): boolean {
+    return this.retryFetchErrors;
+  }
+
+  getEnableShellOutputEfficiency(): boolean {
+    return this.enableShellOutputEfficiency;
   }
 
   getShellExecutionConfig(): ShellExecutionConfig {
@@ -1039,8 +1100,8 @@ export class Config {
     return this.enableMessageBusIntegration;
   }
 
-  getEnableSubagents(): boolean {
-    return this.enableSubagents;
+  getCodebaseInvestigatorSettings(): CodebaseInvestigatorSettings {
+    return this.codebaseInvestigatorSettings;
   }
 
   async createToolRegistry(): Promise<ToolRegistry> {
@@ -1135,9 +1196,11 @@ export class Config {
     }
 
     // Register Subagents as Tools
-    if (this.getEnableSubagents()) {
-      const agentDefinitions = this.agentRegistry.getAllDefinitions();
-      for (const definition of agentDefinitions) {
+    if (this.getCodebaseInvestigatorSettings().enabled) {
+      const definition = this.agentRegistry.getDefinition(
+        'codebase_investigator',
+      );
+      if (definition) {
         // We must respect the main allowed/exclude lists for agents too.
         const excludeTools = this.getExcludeTools() || [];
         const allowedTools = this.getAllowedTools();
